@@ -7,6 +7,9 @@ import 'screens/insights_screen.dart';
 import 'screens/camera_screen.dart';
 import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'services/notification_service.dart';
+import 'services/health_service.dart';
 
 class WellbeingApp extends StatelessWidget {
   const WellbeingApp({super.key});
@@ -17,7 +20,151 @@ class WellbeingApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Wellbeing App',
       theme: AppTheme.light(),
-      home: const WellbeingShell(),
+      home: const SplashDecider(),
+    );
+  }
+}
+
+class SplashDecider extends StatefulWidget {
+  const SplashDecider({super.key});
+
+  @override
+  State<SplashDecider> createState() => _SplashDeciderState();
+}
+
+class _SplashDeciderState extends State<SplashDecider> {
+  bool _initialized = false;
+  bool _seen = false;
+  bool _consentGiven = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final seen = prefs.getBool('seenSplash') ?? false;
+    final consent = prefs.getBool('consentGiven') ?? false;
+    setState(() {
+      _initialized = true;
+      _seen = seen;
+      _consentGiven = consent;
+    });
+  }
+
+  void _completeSplash() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seenSplash', true);
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const WellbeingShell()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_initialized) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (!_consentGiven) {
+      return ConsentScreen(onAccepted: () async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('consentGiven', true);
+        setState(() => _consentGiven = true);
+      });
+    }
+
+    if (_seen) return const WellbeingShell();
+
+    return SplashScreen(onContinue: _completeSplash);
+  }
+}
+
+class ConsentScreen extends StatelessWidget {
+  final VoidCallback onAccepted;
+
+  const ConsentScreen({required this.onAccepted, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset('assets/images/logo.png', width: 120, height: 120),
+                const SizedBox(height: 18),
+                Text(
+                  'Antes de continuar, necesitamos tu consentimiento para procesar datos localmente y, si das permiso, leer métricas de Health Connect.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Los datos se procesan en tu dispositivo. No subimos información sin pedirlo explícitamente.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: onAccepted,
+                  child: const Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 18.0, vertical: 12.0),
+                    child: Text('Acepto'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SplashScreen extends StatelessWidget {
+  final VoidCallback onContinue;
+
+  const SplashScreen({required this.onContinue, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset('assets/images/logo.png', width: 160, height: 160),
+                const SizedBox(height: 18),
+                Text(
+                  'Bienvenido — mira tu pulso diario con suavidad',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: onContinue,
+                  child: const Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 18.0, vertical: 12.0),
+                    child: Text('Entrar'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -34,6 +181,73 @@ class _WellbeingShellState extends State<WellbeingShell> {
   WellbeingSnapshot _snapshot = WellbeingSnapshot.initial();
   final List<CheckInRecord> _history = [];
   final List<InsightItem> _insights = [];
+  bool _notificationsEnabled = false;
+  TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
+
+  @override
+  void initState() {
+    super.initState();
+    _initPreferencesAndNotifications();
+  }
+
+  Future<void> _initPreferencesAndNotifications() async {
+    await NotificationService.init();
+    // Initialize HealthService scaffold (permission requests are user-driven)
+    await HealthService.instance.init();
+    final prefs = await SharedPreferences.getInstance();
+    final enabled = prefs.getBool('notificationsEnabled') ?? false;
+    final hour = prefs.getInt('reminderHour') ?? _reminderTime.hour;
+    final minute = prefs.getInt('reminderMinute') ?? _reminderTime.minute;
+    setState(() {
+      _notificationsEnabled = enabled;
+      _reminderTime = TimeOfDay(hour: hour, minute: minute);
+    });
+
+    if (_notificationsEnabled) {
+      await _scheduleDailyReminder();
+    }
+  }
+
+  Future<void> _persistNotificationPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notificationsEnabled', _notificationsEnabled);
+    await prefs.setInt('reminderHour', _reminderTime.hour);
+    await prefs.setInt('reminderMinute', _reminderTime.minute);
+  }
+
+  Future<void> _clearAllData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('seenSplash');
+    await prefs.remove('consentGiven');
+    await prefs.remove('notificationsEnabled');
+    await prefs.remove('reminderHour');
+    await prefs.remove('reminderMinute');
+
+    await _cancelReminder();
+
+    setState(() {
+      _snapshot = WellbeingSnapshot.initial();
+      _history.clear();
+      _insights.clear();
+      _notificationsEnabled = false;
+      _reminderTime = const TimeOfDay(hour: 20, minute: 0);
+    });
+  }
+
+  Future<void> _scheduleDailyReminder() async {
+    final scheduled = NotificationService.nextInstanceOfTime(
+        _reminderTime.hour, _reminderTime.minute);
+    await NotificationService.scheduleDaily(
+      id: 0,
+      title: 'Recordatorio amable',
+      body: '¿Cómo va tu día? Un check-in rápido ayuda a mantener el pulso.',
+      scheduledDate: scheduled,
+    );
+  }
+
+  Future<void> _cancelReminder() async {
+    await NotificationService.cancel(0);
+  }
 
   Future<void> _submitCheckIn(CheckInDraft draft) async {
     final mood = draft.mood.clamp(1.0, 10.0);
@@ -246,21 +460,21 @@ class _WellbeingShellState extends State<WellbeingShell> {
                 : RiskLevel.urgent;
 
     final supportTitle = switch (riskLevel) {
-      RiskLevel.stable => 'Bienestar stable',
-      RiskLevel.watch => 'Vigila la tendencia',
-      RiskLevel.low => 'Conviene hablar con un profesional',
-      RiskLevel.urgent => 'Busca apoyo inmediato',
+      RiskLevel.stable => 'Vas bien',
+      RiskLevel.watch => 'Conviene mirar el ritmo',
+      RiskLevel.low => 'Vale pedir apoyo',
+      RiskLevel.urgent => 'Busca apoyo ahora',
     };
 
     final supportBody = switch (riskLevel) {
       RiskLevel.stable =>
-        'Sigue reforzando sueño, actividad, uso de redes y alimentación. La app seguirá comparando tu baseline personal.',
+        'Sigue con lo que te está funcionando. Dormir bien, moverte un poco y bajar el ruido digital siguen siendo una buena base.',
       RiskLevel.watch =>
-        'Tu patrón merece seguimiento. Si esta tendencia se mantiene varios días, considera hablar con un profesional.',
+        'Algo empieza a moverse. Si este patrón sigue varios días, puede valer la pena hablarlo con alguien de confianza o con un profesional.',
       RiskLevel.low =>
-        'Tu bienestar cayó a una zona baja. La recomendación es hablar con un profesional de salud mental y revisar tus hábitos de soporte.',
+        'Hoy se ve una carga más pesada. No tienes que manejarlo solo; hablar con un profesional puede darte apoyo real.',
       RiskLevel.urgent =>
-        'Si sientes riesgo inmediato o ideas de hacerte daño, busca apoyo urgente: una persona de confianza o urgencias.',
+        'Si sientes que la situación te sobrepasa o hay riesgo inmediato, busca apoyo urgente con una persona de confianza o emergencias.',
     };
 
     final message =
@@ -319,61 +533,126 @@ class _WellbeingShellState extends State<WellbeingShell> {
       }
 
       // --- LÓGICA DE PATRONES CREATIVOS (INSIGHTS) ---
-      _insights
-          .clear(); // Limpiamos para mostrar solo los más relevantes actuales
+      final freshInsights = <InsightItem>[];
+      void addInsight(InsightItem item) {
+        if (freshInsights.length < 5) {
+          freshInsights.add(item);
+        }
+      }
 
-      // Patrón de Sueño
+      // Sueño
       if (sleepHours < 6.5) {
-        _insights.add(InsightItem(
-          title: 'Deuda de sueño detectada',
+        addInsight(InsightItem(
+          title: 'Noche corta',
           body:
-              'Has dormido menos de 6.5h. El modelo BiLSTM asocia esto con una caída en el bienestar mañana.',
-          label: 'Sueño',
+              'Dormiste poco. Si puedes, hoy conviene bajar el ritmo y proteger un poco más la noche.',
+          label: 'Descanso',
         ));
       } else if (sleepHours > 8.5) {
-        _insights.add(InsightItem(
-          title: 'Recuperación profunda',
+        addInsight(InsightItem(
+          title: 'Buen descanso',
           body:
-              'Tu nivel de sueño hoy es óptimo para la restauración cognitiva.',
-          label: 'Sueño',
+              'Dormiste bien y eso suele ayudar a sostener el ánimo y la concentración durante el día.',
+          label: 'Descanso',
         ));
       }
 
-      // Patrón de Actividad
+      // Actividad
       if (activityMinutes < 20) {
-        _insights.add(InsightItem(
-          title: 'Sedentarismo inusual',
+        addInsight(InsightItem(
+          title: 'Poco movimiento',
           body:
-              'Tu actividad está por debajo de tu baseline. Intenta caminar 10 min.',
-          label: 'Actividad',
+              'Hoy el cuerpo se movió poco. Una caminata breve o salir a tomar aire puede ayudarte a cambiar el tono del día.',
+          label: 'Movimiento',
         ));
       } else if (activityMinutes > 90) {
-        _insights.add(InsightItem(
-          title: 'Carga física positiva',
-          body: 'Nivel de actividad alto. Esto compensará el estrés detectado.',
-          label: 'Actividad',
+        addInsight(InsightItem(
+          title: 'Buen movimiento',
+          body:
+              'Tuviste bastante actividad. Eso suele ayudar a despejar la cabeza y a descargar tensión.',
+          label: 'Movimiento',
         ));
       }
 
-      // Patrón de Redes
+      // Pantallas / redes
       if (socialMinutes > 180) {
-        _insights.add(InsightItem(
-          title: 'Sobrecarga digital',
+        addInsight(InsightItem(
+          title: 'Muchas pantallas',
           body:
-              'El tiempo en redes está afectando tu foco. Considera un "digital detox".',
-          label: 'Redes',
+              'Pasaste bastante tiempo en redes. Un descanso corto de pantalla puede darte un poco de aire mental.',
+          label: 'Pantallas',
+        ));
+      } else if (socialMinutes < 60) {
+        addInsight(InsightItem(
+          title: 'Pantallas bajo control',
+          body:
+              'Mantener las pantallas bajas puede ayudar a que el día se sienta menos pesado.',
+          label: 'Pantallas',
         ));
       }
 
-      // Fallback si no hay patrones críticos detectados
-      if (_insights.isEmpty) {
-        _insights.add(InsightItem(
-          title: 'Patrones estables',
+      // Energía
+      if (energy <= 4) {
+        addInsight(InsightItem(
+          title: 'Batería baja',
           body:
-              'Tus indicadores de hoy se mantienen cerca de tu promedio habitual.',
+              'Hoy parece que te falta un poco de energía. Trata de hacer menos presión y prioriza lo esencial.',
+          label: 'Energía',
+        ));
+      } else if (energy >= 8) {
+        addInsight(InsightItem(
+          title: 'Buena energía',
+          body:
+              'Te notas con energía. Puede ser un buen momento para avanzar en algo que venías postergando.',
+          label: 'Energía',
+        ));
+      }
+
+      // Ánimo y tensión
+      if (mood <= 4) {
+        addInsight(InsightItem(
+          title: 'Ánimo sensible',
+          body:
+              'Hoy te sientes más frágil de lo normal. No hace falta exigirte de más; avanza paso a paso.',
+          label: 'Ánimo',
+        ));
+      } else if (mood >= 8) {
+        addInsight(InsightItem(
+          title: 'Ánimo firme',
+          body:
+              'Te notas bastante bien. Es un buen día para sostener rutinas que te están ayudando.',
+          label: 'Ánimo',
+        ));
+      }
+
+      if (stress >= 7) {
+        addInsight(InsightItem(
+          title: 'Tensión alta',
+          body:
+              'Se nota bastante carga. Bajarle un poco al ritmo hoy puede evitar que el día se haga más pesado.',
+          label: 'Tensión',
+        ));
+      } else if (stress <= 3) {
+        addInsight(InsightItem(
+          title: 'Poca tensión',
+          body:
+              'Hoy vienes con más calma. Aprovecha ese margen para hacer algo que te haga bien.',
+          label: 'Tensión',
+        ));
+      }
+
+      if (freshInsights.isEmpty) {
+        freshInsights.add(InsightItem(
+          title: 'Día parejo',
+          body:
+              'No se ven cambios fuertes. Sigue con la rutina que te está funcionando y observa cómo te sientes mañana.',
           label: 'General',
         ));
       }
+
+      _insights
+        ..clear()
+        ..addAll(freshInsights);
 
       _selectedIndex = 0;
     });
@@ -413,6 +692,25 @@ class _WellbeingShellState extends State<WellbeingShell> {
       SettingsScreen(
         snapshot: _snapshot,
         onResetBaseline: _resetBaseline,
+        notificationsEnabled: _notificationsEnabled,
+        reminderTime: _reminderTime,
+        onNotificationsChanged: (value) async {
+          setState(() => _notificationsEnabled = value);
+          if (_notificationsEnabled) {
+            await _scheduleDailyReminder();
+          } else {
+            await _cancelReminder();
+          }
+          await _persistNotificationPrefs();
+        },
+        onReminderTimeChanged: (value) async {
+          setState(() => _reminderTime = value);
+          if (_notificationsEnabled) {
+            await _scheduleDailyReminder();
+          }
+          await _persistNotificationPrefs();
+        },
+        onClearData: _clearAllData,
       ),
     ];
 

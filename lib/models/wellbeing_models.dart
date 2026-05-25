@@ -131,30 +131,30 @@ class WellbeingInferenceService {
       if (score >= 70) {
         riskLevel = 'stable';
         message = [
-          '¡Vas volando! Tus ritmos están en una sintonía increíble hoy.',
-          'Nivel experto en equilibrio detectado. Sigue así.',
-          'Tus patrones de descanso y actividad están alineados con tu mejor versión.'
+          'Vas con buen ritmo hoy. Se nota bastante equilibrio en cómo vienes.',
+          'Tu día se ve bien armado. Sigue cuidando lo que ya te está funcionando.',
+          'Hoy tus hábitos están bastante de tu lado. Buen trabajo sosteniendo eso.'
         ][Random().nextInt(3)];
       } else if (score >= 45) {
         riskLevel = 'attention';
         message = [
-          'Tu cuerpo nota los cambios. Un poco de calma extra hoy no vendría mal.',
-          'Hay pequeñas olas en tu baseline. Nada grave, pero mantén el ojo en el descanso.',
-          'Estamos detectando ligeras variaciones. ¿Qué tal un respiro de 5 minutos?'
+          'Hoy hay algunos cambios pequeños. No es grave, pero conviene darte un poco de margen.',
+          'Se nota un día algo movido. Un descanso corto puede ayudarte a recomponerte.',
+          'Hay señales suaves de cansancio o tensión. Bajar un poco el ritmo puede venir bien.'
         ][Random().nextInt(3)];
       } else if (score >= 25) {
         riskLevel = 'elevated_attention';
         message = [
-          'La IA detecta una carga importante. Es momento de priorizar tu paz mental.',
-          'Tus indicadores sugieren que necesitas una pausa real. No te exijas de más.',
-          'Hemos notado un desvío claro de tu ritmo habitual. Escucha a tu cuerpo.'
+          'Hoy la carga se nota bastante. Vale la pena ir más despacio y pedir apoyo si hace falta.',
+          'Parece un día pesado. No tienes que empujarte de más; ve paso a paso.',
+          'Tu energía y tu ánimo están pidiendo más cuidado. Tomar aire y parar un poco puede ayudar.'
         ][Random().nextInt(3)];
       } else {
         riskLevel = 'significant_change';
         message = [
-          'Alerta de cambio brusco. Tu baseline está pidiendo ayuda a gritos.',
-          'Prioridad absoluta: Autocuidado. Los patrones actuales no son sostenibles.',
-          'Riesgo de agotamiento detectado. Es vital que busques un espacio de apoyo.'
+          'Se ve un bajón importante. No lo cargues solo; busca apoyo cuanto antes.',
+          'Hoy estás en una zona delicada. Hablar con alguien de confianza puede hacer diferencia.',
+          'El día se ve bastante cuesta arriba. Si te sientes sobrepasado, busca ayuda ahora.'
         ][Random().nextInt(3)];
       }
 
@@ -403,11 +403,11 @@ class WellbeingSnapshot {
       stressLoad: 0.0,
       moodScore: 0.0,
       message:
-          'Aún no hay check-ins. Haz tu primer registro para crear tu baseline.',
+          'Aún no hay registros. Haz tu primer check-in para empezar a ver tu propio patrón.',
       riskLevel: RiskLevel.stable,
-      supportTitle: 'Sin datos todavía',
+      supportTitle: 'Todavía no hay datos',
       supportBody:
-          'Cuando guardes tu primer check-in, la app empezará a construir tu baseline personal.',
+          'Cuando guardes tu primer check-in, la app empezará a leer tu ritmo personal.',
       trend: const [],
     );
   }

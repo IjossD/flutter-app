@@ -134,9 +134,9 @@ class HomeScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               const _InsightHighlight(
-                title: 'Sin señales todavía',
+                title: 'Sin señales claras todavía',
                 body:
-                    'Aún no hay check-ins para comparar. Guarda tu primer registro y aquí empezará tu baseline personal.',
+                    'Aún no hay check-ins para comparar. Guarda tu primer registro y aquí empezará tu patrón personal.',
                 label: 'Inicio',
               ),
             ],
@@ -171,7 +171,7 @@ class _EmptyDashboardCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Haz tu primer check-in para que la app empiece vacía y construya tu baseline personal desde cero.',
+            'Haz tu primer check-in para que la app empiece vacía y empiece a leer tu patrón personal desde cero.',
             style:
                 Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
           ),
@@ -216,7 +216,7 @@ class _Header extends StatelessWidget {
               Text(greeting, style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 6),
               Text(
-                'Tu baseline personal es la referencia principal. La app se ajusta a tus cambios, no a promedios genéricos.',
+                'Tu ritmo personal es la referencia principal. La app se ajusta a tus cambios, no a promedios genéricos.',
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium

@@ -16,14 +16,19 @@ dependencies:
   permission_handler: ^11.3.0
   path_provider: ^2.1.0
   http: ^1.2.0
-  share_plus: ^10.0.0
+  share_plus: ^10.1.0
   onnxruntime_v2: ^1.23.2
-  image: ^4.2.0
+  image: ^4.5.0
+  flutter_local_notifications: ^21.0.0
+  timezone: ^0.11.0
+  shared_preferences: ^2.5.2
+  health: ^13.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -31,3 +36,12 @@ flutter:
     - assets/models/bilstm_wellbeing.onnx
     - assets/models/bilstm_wellbeing.onnx.data
     - assets/models/nutrition_model.onnx
+    - assets/images/logo.png
+    - assets/icons/app_icon.png
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/icons/app_icon.png
+  adaptive_icon_background: "#F7F5F2"
+  adaptive_icon_foreground: assets/icons/app_icon.png

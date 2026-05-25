@@ -27,7 +27,7 @@ class InsightsScreen extends StatelessWidget {
           Text('Insights', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 8),
           Text(
-            'Resumen traducido en lenguaje simple. El foco está en cambios respecto a tu baseline personal.',
+            'Resumen en lenguaje simple. El foco está en cambios respecto a tu ritmo habitual.',
             style:
                 Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
           ),
@@ -46,15 +46,18 @@ class InsightsScreen extends StatelessWidget {
                 ),
               ),
           const SizedBox(height: 8),
-          Text('Patrones detectados',
+          Text('Lo más relevante hoy',
               style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          ...insights.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _InsightCard(item: item),
-            ),
-          ),
+          if (insights.isNotEmpty)
+            ...insights.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _InsightCard(item: item),
+              ),
+            )
+          else
+            const _EmptyInsightsCard(),
         ],
       ),
     );
@@ -157,6 +160,26 @@ class _InsightCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _EmptyInsightsCard extends StatelessWidget {
+  const _EmptyInsightsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Text(
+        'Por ahora no hay señales fuertes. Eso también cuenta: significa que hoy no aparece nada que merezca más peso que el resto.',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45),
       ),
     );
   }

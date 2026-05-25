@@ -195,17 +195,29 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
   double get _estimatedScore {
     final moodScore = _mood * 10;
-    final sleepScore = (100 - (_sleepHours - 7.5).abs() * 18).clamp(0.0, 100.0);
-    final activityScore = (_activityMinutes * 1.6).clamp(0.0, 100.0);
-    final socialScore = (100 - _socialMinutes * 0.35).clamp(0.0, 100.0);
+    final sleepInputScore =
+        (100 - (_sleepHours - 7.5).abs() * 18).clamp(0.0, 100.0);
+    final activityInputScore = (_activityMinutes * 1.6).clamp(0.0, 100.0);
+    final socialInputScore = (100 - _socialMinutes * 0.35).clamp(0.0, 100.0);
     final energyScore = (_energy * 10).clamp(0.0, 100.0);
-    final stressScore = ((10.0 - _stress) * 10).clamp(0.0, 100.0);
-    final score = (moodScore * 0.28) +
+    final stressLoad = (100.0 - _stress * 10).clamp(0.0, 100.0);
+
+    final sleepScore =
+        ((widget.snapshot.sleepScore * 0.55) + (sleepInputScore * 0.45))
+            .clamp(0.0, 100.0);
+    final activityScore =
+        ((widget.snapshot.activityScore * 0.55) + (activityInputScore * 0.45))
+            .clamp(0.0, 100.0);
+    final socialScore =
+        ((widget.snapshot.socialScore * 0.55) + (socialInputScore * 0.45))
+            .clamp(0.0, 100.0);
+
+    final score = (moodScore * 0.3) +
         (sleepScore * 0.22) +
-        (activityScore * 0.16) +
-        (socialScore * 0.14) +
+        (activityScore * 0.15) +
+        (socialScore * 0.13) +
         (energyScore * 0.10) +
-        (stressScore * 0.10);
+        (stressLoad * 0.10);
     return score.clamp(0.0, 100.0);
   }
 

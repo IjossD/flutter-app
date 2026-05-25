@@ -2,20 +2,31 @@ import 'package:flutter/material.dart';
 
 import '../models/wellbeing_models.dart';
 import '../theme/app_theme.dart';
-import '../utils/permissions.dart';
 
 class SettingsScreen extends StatelessWidget {
   final WellbeingSnapshot snapshot;
   final VoidCallback onResetBaseline;
+  final bool notificationsEnabled;
+  final TimeOfDay reminderTime;
+  final ValueChanged<bool> onNotificationsChanged;
+  final ValueChanged<TimeOfDay> onReminderTimeChanged;
+  final VoidCallback onClearData;
 
   const SettingsScreen({
     required this.snapshot,
     required this.onResetBaseline,
+    required this.notificationsEnabled,
+    required this.reminderTime,
+    required this.onNotificationsChanged,
+    required this.onReminderTimeChanged,
+    required this.onClearData,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    final reminderLabel = reminderTime.format(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
       child: Column(
@@ -24,7 +35,7 @@ class SettingsScreen extends StatelessWidget {
           Text('Ajustes', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 8),
           Text(
-            'Privacidad, baseline y permisos. Esta primera versión trabaja con datos locales simulados.',
+            'Privacidad, recordatorios y permisos. Esta primera versión trabaja con datos locales simulados.',
             style:
                 Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
           ),
@@ -32,10 +43,42 @@ class SettingsScreen extends StatelessWidget {
           _SettingsCard(
             title: 'Baseline personal',
             subtitle:
-                'El sistema compara tu día de hoy contra tu propio patrón reciente, no contra una media poblacional.',
+                'La app compara tu día de hoy contra tu patrón reciente, no contra una media poblacional.',
             trailing: TextButton(
               onPressed: onResetBaseline,
               child: const Text('Restablecer'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SettingsCard(
+            title: 'Recordatorios suaves',
+            subtitle: notificationsEnabled
+                ? 'Te recordaremos hacer tu check-in a una hora tranquila.'
+                : 'Actívalos si quieres un recordatorio amable para registrar cómo va tu día.',
+            trailing: Switch(
+              value: notificationsEnabled,
+              onChanged: onNotificationsChanged,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SettingsCard(
+            title: 'Hora de recordatorio',
+            subtitle:
+                'Elige un momento que te resulte cómodo y no te interrumpa demasiado.',
+            trailing: FilledButton.tonal(
+              onPressed: notificationsEnabled
+                  ? () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: reminderTime,
+                      );
+                      if (!context.mounted) return;
+                      if (picked != null) {
+                        onReminderTimeChanged(picked);
+                      }
+                    }
+                  : null,
+              child: Text(reminderLabel),
             ),
           ),
           const SizedBox(height: 12),
@@ -50,10 +93,10 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _SettingsCard(
-            title: 'Notificaciones suaves',
+            title: 'Seguimiento amable',
             subtitle:
-                'Recordatorios y insights no invasivos, orientados a hábitos y no a diagnósticos.',
-            trailing: Switch(value: true, onChanged: (_) {}),
+                'Recordatorios y señales útiles, pensados para acompañarte sin ponerse encima.',
+            trailing: const Icon(Icons.notifications_active_outlined),
           ),
           const SizedBox(height: 12),
           _SettingsCard(
@@ -98,28 +141,50 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           FilledButton.tonalIcon(
-            onPressed: () async {
-              final results = await Permissions.requestAll();
-              final summary = results.entries
-                  .map((e) =>
-                      '${e.key.toString().split('.').last}: ${e.value.toString().split('.').last}')
-                  .join('\n');
-              await showDialog<void>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Permisos solicitados'),
-                  content: Text(summary),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        child: const Text('OK')),
-                  ],
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      'La parte de permisos nativos se puede preparar más adelante desde este bloque.'),
                 ),
               );
-              await Permissions.openSettingsIfNeeded(context, results);
             },
             icon: const Icon(Icons.file_download_outlined),
             label: const Text('Preparar exportación'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(54),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.tonalIcon(
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Borrar datos'),
+                  content: const Text(
+                      'Esto eliminará tu historial local y restablecerá la configuración. ¿Estás seguro?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('Cancelar')),
+                    FilledButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        child: const Text('Borrar')),
+                  ],
+                ),
+              );
+              if (confirmed == true) {
+                onClearData();
+                messenger.showSnackBar(
+                    const SnackBar(content: Text('Datos borrados.')));
+              }
+            },
+            icon: const Icon(Icons.delete_outline),
+            label: const Text('Borrar datos'),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(54),
               shape: RoundedRectangleBorder(
