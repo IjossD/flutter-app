@@ -1,0 +1,36 @@
+# Flutter-related
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Android-related
+android/local.properties
+android/.gradle/
+android/app/debug/
+android/app/release/
+
+# iOS/macOS-related
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_assets/
+macos/Flutter/ephemeral/
+
+# Desktop-related
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+
+# IDE-related
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS-related
+.DS_Store
+Thumbs.db
