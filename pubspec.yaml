@@ -17,6 +17,7 @@ dependencies:
   path_provider: ^2.1.0
   http: ^1.2.0
   share_plus: ^10.0.0
+  onnxruntime: ^1.4.1
 
 dev_dependencies:
   flutter_test:
@@ -25,3 +26,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/models/bilstm_wellbeing.onnx
+    - assets/models/bilstm_wellbeing.onnx.data

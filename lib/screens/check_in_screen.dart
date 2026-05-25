@@ -45,7 +45,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
           Text(
             'Toma unos segundos. Estos datos ayudan a comparar tu estado de hoy contra tu baseline personal.',
             style:
-                Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
+            Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
           ),
           const SizedBox(height: 18),
           _SliderCard(
@@ -131,7 +131,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                   maxLines: 4,
                   decoration: InputDecoration(
                     hintText:
-                        'Ejemplo: dormí poco, caminé 30 min y pasé mucho tiempo en redes...',
+                    'Ejemplo: dormí poco, caminé 30 min y pasé mucho tiempo en redes...',
                     filled: true,
                     fillColor: AppTheme.background,
                     border: OutlineInputBorder(
@@ -195,16 +195,16 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
   double get _estimatedScore {
     final moodScore = _mood * 10;
-    final sleepScore = (100 - (_sleepHours - 7.5).abs() * 18).clamp(0, 100);
-    final activityScore = (_activityMinutes * 1.6).clamp(0, 100);
-    final socialScore = (100 - _socialMinutes * 0.35).clamp(0, 100);
-    final stressScore = ((10 - _stress) * 10).clamp(0, 100);
+    final sleepScore = (100 - (_sleepHours - 7.5).abs() * 18).clamp(0.0, 100.0);
+    final activityScore = (_activityMinutes * 1.6).clamp(0.0, 100.0);
+    final socialScore = (100 - _socialMinutes * 0.35).clamp(0.0, 100.0);
+    final stressScore = ((10.0 - _stress) * 10).clamp(0.0, 100.0);
     final score = (moodScore * 0.35) +
         (sleepScore * 0.25) +
         (activityScore * 0.2) +
         (socialScore * 0.15) +
         (stressScore * 0.05);
-    return score.clamp(0, 100);
+    return score.clamp(0.0, 100.0);
   }
 
   String get _moodLabel =>
@@ -225,6 +225,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     return labels[4];
   }
 
+  // CORRECCIÓN AQUÍ: Convertimos los double de la vista a los int que espera CheckInDraft usando .toInt()
   void _submit() {
     widget.onSubmit(
       CheckInDraft(
@@ -306,3 +307,5 @@ class _SliderCard extends StatelessWidget {
     );
   }
 }
+
+

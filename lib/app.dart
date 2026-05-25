@@ -36,20 +36,17 @@ class _WellbeingShellState extends State<WellbeingShell> {
   final List<InsightItem> _insights = [
     InsightItem(
       title: 'Sueño estable con ligera mejora',
-      body:
-          'Tu descanso de los últimos días se mantiene por encima de tu baseline reciente.',
+      body: 'Tu descanso de los últimos días se mantiene por encima de tu baseline reciente.',
       label: 'Sueño',
     ),
     InsightItem(
       title: 'Actividad consistente',
-      body:
-          'La actividad diaria no cayó por debajo de tu rango normal y eso ayuda a sostener el score.',
+      body: 'La actividad diaria no cayó por debajo de tu rango normal y eso ayuda a sostener el score.',
       label: 'Actividad',
     ),
     InsightItem(
       title: 'Uso de redes contenido',
-      body:
-          'El tiempo en redes sigue dentro de un rango manejable y no está empujando el baseline hacia abajo.',
+      body: 'El tiempo en redes sigue dentro de un rango manejable y no está empujando el baseline hacia abajo.',
       label: 'Redes',
     ),
   ];
@@ -59,37 +56,37 @@ class _WellbeingShellState extends State<WellbeingShell> {
     return [
       CheckInRecord(
         date: now.subtract(const Duration(days: 3)),
-        mood: 7,
+        mood: 7.0,
         sleepHours: 7.5,
-        activityMinutes: 52,
-        socialMinutes: 110,
-        energy: 6,
-        stress: 4,
-        score: 70,
+        activityMinutes: 52.0,
+        socialMinutes: 110.0,
+        energy: 6.0,
+        stress: 4.0,
+        score: 70.0,
         note: 'Sueño razonable y actividad constante.',
         riskLevel: RiskLevel.stable,
       ),
       CheckInRecord(
         date: now.subtract(const Duration(days: 2)),
-        mood: 6,
+        mood: 6.0,
         sleepHours: 6.4,
-        activityMinutes: 34,
-        socialMinutes: 185,
-        energy: 6,
-        stress: 5,
-        score: 66,
+        activityMinutes: 34.0,
+        socialMinutes: 185.0,
+        energy: 6.0,
+        stress: 5.0,
+        score: 66.0,
         note: 'Más pantallas en la noche.',
         riskLevel: RiskLevel.watch,
       ),
       CheckInRecord(
         date: now.subtract(const Duration(days: 1)),
-        mood: 7,
+        mood: 7.0,
         sleepHours: 7.8,
-        activityMinutes: 61,
-        socialMinutes: 95,
-        energy: 7,
-        stress: 4,
-        score: 73,
+        activityMinutes: 61.0,
+        socialMinutes: 95.0,
+        energy: 7.0,
+        stress: 4.0,
+        score: 73.0,
         note: 'Mejor recuperación del descanso.',
         riskLevel: RiskLevel.stable,
       ),
@@ -97,74 +94,60 @@ class _WellbeingShellState extends State<WellbeingShell> {
   }
 
   void _submitCheckIn(CheckInDraft draft) {
-    final mood = draft.mood.clamp(1, 10).toDouble();
-    final sleepHours = draft.sleepHours.clamp(0, 12).toDouble();
-    final activityMinutes = draft.activityMinutes.clamp(0, 240).toDouble();
-    final socialMinutes = draft.socialMinutes.clamp(0, 360).toDouble();
-    final energy = draft.energy.clamp(1, 10).toDouble();
-    final stress = draft.stress.clamp(1, 10).toDouble();
+    final mood = draft.mood.clamp(1.0, 10.0);
+    final sleepHours = draft.sleepHours.clamp(0.0, 12.0);
+    final activityMinutes = draft.activityMinutes.clamp(0.0, 240.0);
+    final socialMinutes = draft.socialMinutes.clamp(0.0, 360.0);
+    final energy = draft.energy.clamp(1.0, 10.0);
+    final stress = draft.stress.clamp(1.0, 10.0);
 
     final moodScore = mood * 10;
-    final sleepInputScore =
-        (100 - (sleepHours - 7.5).abs() * 18).clamp(0, 100).toDouble();
-    final activityInputScore = (activityMinutes * 1.6).clamp(0, 100).toDouble();
-    final socialInputScore =
-        (100 - socialMinutes * 0.35).clamp(0, 100).toDouble();
-    final sleepScore =
-        ((_snapshot.sleepScore * 0.55) + (sleepInputScore * 0.45))
-            .clamp(0, 100)
-            .toDouble();
-    final activityScore =
-        ((_snapshot.activityScore * 0.55) + (activityInputScore * 0.45))
-            .clamp(0, 100)
-            .toDouble();
-    final socialScore =
-        ((_snapshot.socialScore * 0.55) + (socialInputScore * 0.45))
-            .clamp(0, 100)
-            .toDouble();
-    final stressLoad = (100 - stress * 10).clamp(0, 100).toDouble();
+    final sleepInputScore = (100 - (sleepHours - 7.5).abs() * 18).clamp(0.0, 100.0);
+    final activityInputScore = (activityMinutes * 1.6).clamp(0.0, 100.0);
+    final socialInputScore = (100 - socialMinutes * 0.35).clamp(0.0, 100.0);
+
+    final sleepScore = ((_snapshot.sleepScore * 0.55) + (sleepInputScore * 0.45)).clamp(0.0, 100.0);
+    final activityScore = ((_snapshot.activityScore * 0.55) + (activityInputScore * 0.45)).clamp(0.0, 100.0);
+    final socialScore = ((_snapshot.socialScore * 0.55) + (socialInputScore * 0.45)).clamp(0.0, 100.0);
+
+    final stressLoad = (100.0 - stress * 10).clamp(0.0, 100.0);
     final overallScore = ((moodScore * 0.35) +
-            (sleepScore * 0.25) +
-            (activityScore * 0.2) +
-            (socialScore * 0.15) +
-            ((100 - stressLoad) * 0.05))
-        .clamp(0, 100)
-        .toDouble();
+        (sleepScore * 0.25) +
+        (activityScore * 0.2) +
+        (socialScore * 0.15) +
+        ((100.0 - stressLoad) * 0.05))
+        .clamp(0.0, 100.0);
 
     final note = draft.note.trim();
-    final habitSummary =
-        'Sueño ${sleepHours.toStringAsFixed(1)} h, actividad ${activityMinutes.toStringAsFixed(0)} min y redes ${socialMinutes.toStringAsFixed(0)} min.';
-    final riskLevel = overallScore >= 75
+    final habitSummary = 'Sueño ${sleepHours.toStringAsFixed(1)} h, actividad ${activityMinutes.toStringAsFixed(0)} min y redes ${socialMinutes.toStringAsFixed(0)} min.';
+
+    final riskLevel = overallScore >= 75.0
         ? RiskLevel.stable
-        : overallScore >= 55
-            ? RiskLevel.watch
-            : overallScore >= 35
-                ? RiskLevel.low
-                : RiskLevel.urgent;
+        : overallScore >= 55.0
+        ? RiskLevel.watch
+        : overallScore >= 35.0
+        ? RiskLevel.low
+        : RiskLevel.urgent;
 
     final supportTitle = switch (riskLevel) {
-      RiskLevel.stable => 'Bienestar estable',
+      RiskLevel.stable => 'Bienestar stable',
       RiskLevel.watch => 'Vigila la tendencia',
       RiskLevel.low => 'Conviene hablar con un profesional',
       RiskLevel.urgent => 'Busca apoyo inmediato',
     };
 
     final supportBody = switch (riskLevel) {
-      RiskLevel.stable =>
-        'Sigue reforzando sueño, actividad, uso de redes y alimentación. La app seguirá comparando tu baseline personal.',
-      RiskLevel.watch =>
-        'Tu patrón merece seguimiento. Si esta tendencia se mantiene varios días, considera hablar con un profesional.',
-      RiskLevel.low =>
-        'Tu bienestar cayó a una zona baja. La recomendación es hablar con un profesional de salud mental y revisar tus hábitos de soporte.',
-      RiskLevel.urgent =>
-        'Si sientes riesgo inmediato o ideas de hacerte daño, busca apoyo urgente: una persona de confianza, Línea 106 o urgencias.',
+      RiskLevel.stable => 'Sigue reforzando sueño, actividad, uso de redes y alimentación. La app seguirá comparando tu baseline personal.',
+      RiskLevel.watch => 'Tu patrón merece seguimiento. Si esta tendencia se mantiene varios días, considera hablar con un profesional.',
+      RiskLevel.low => 'Tu bienestar cayó a una zona baja. La recomendación es hablar con un profesional de salud mental y revisar tus hábitos de soporte.',
+      RiskLevel.urgent => 'Si sientes riesgo inmediato o ideas de hacerte daño, busca apoyo urgente: una persona de confianza o urgencias.',
     };
 
-    final message = mood >= 7
+    final message = mood >= 7.0
         ? 'Tu check-in sugiere un día bastante equilibrado. El baseline personal sigue apuntando a estabilidad.'
-        : stress >= 7
-            ? 'Hay algo de carga hoy. La app prioriza tu baseline personal para detectar desvíos sostenidos.'
-            : 'Tu estado muestra variaciones leves, sin una ruptura clara del patrón normal.';
+        : stress >= 7.0
+        ? 'Hay algo de carga hoy. La app prioriza tu baseline personal para detectar desvíos sostenidos.'
+        : 'Tu estado muestra variaciones leves, sin una ruptura clara del patrón normal.';
 
     setState(() {
       _snapshot = _snapshot.copyWith(
@@ -174,16 +157,13 @@ class _WellbeingShellState extends State<WellbeingShell> {
         socialScore: socialScore,
         stressLoad: stressLoad,
         moodScore: moodScore,
-        message: note.isEmpty
-            ? '$message $habitSummary'
-            : '$message Nota guardada: $note. $habitSummary',
+        message: note.isEmpty ? '$message $habitSummary' : '$message Nota guardada: $note. $habitSummary',
         riskLevel: riskLevel,
         supportTitle: supportTitle,
         supportBody: supportBody,
-        trend: [..._snapshot.trend.sublist(1), overallScore]
-            .map((value) => value.toDouble())
-            .toList(),
+        trend: [..._snapshot.trend.sublist(1), overallScore].map((value) => value.toDouble()).toList(),
       );
+
       _history.insert(
         0,
         CheckInRecord(
@@ -206,8 +186,7 @@ class _WellbeingShellState extends State<WellbeingShell> {
         0,
         InsightItem(
           title: 'Check-in actualizado',
-          body:
-              'Mood ${mood.toStringAsFixed(0)}/10, energía ${energy.toStringAsFixed(0)}/10 y estrés ${stress.toStringAsFixed(0)}/10. Se recalculó el score local.',
+          body: 'Mood ${mood.toStringAsFixed(0)}/10, energía ${energy.toStringAsFixed(0)}/10 y estrés ${stress.toStringAsFixed(0)}/10. Se recalculó el score local.',
           label: 'Hoy',
         ),
       );
@@ -233,7 +212,7 @@ class _WellbeingShellState extends State<WellbeingShell> {
         history: _history,
         onOpenCheckIn: () => setState(() => _selectedIndex = 1),
         onRegisterSupportAction: _registerSupportAction,
-        onOpenCamera: _openCameraStub,
+        onOpenCamera: _openCameraStub, // Mantenemos el stub ya que HomeScreen lo procesará internamente en subwidgets si lo necesita
       ),
       CheckInScreen(
         snapshot: _snapshot,
@@ -258,29 +237,18 @@ class _WellbeingShellState extends State<WellbeingShell> {
       body: SafeArea(child: pages[_selectedIndex]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) =>
-            setState(() => _selectedIndex = index),
+        onDestinationSelected: (index) => setState(() => _selectedIndex = index),
         destinations: const [
           NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Inicio'),
+              icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Inicio'),
           NavigationDestination(
-              icon: Icon(Icons.edit_note_outlined),
-              selectedIcon: Icon(Icons.edit_note),
-              label: 'Check-in'),
+              icon: Icon(Icons.edit_note_outlined), selectedIcon: Icon(Icons.edit_note), label: 'Check-in'),
           NavigationDestination(
-              icon: Icon(Icons.insights_outlined),
-              selectedIcon: Icon(Icons.insights),
-              label: 'Insights'),
+              icon: Icon(Icons.insights_outlined), selectedIcon: Icon(Icons.insights), label: 'Insights'),
           NavigationDestination(
-              icon: Icon(Icons.camera_alt_outlined),
-              selectedIcon: Icon(Icons.camera_alt),
-              label: 'Cámara'),
+              icon: Icon(Icons.camera_alt_outlined), selectedIcon: Icon(Icons.camera_alt), label: 'Cámara'),
           NavigationDestination(
-              icon: Icon(Icons.tune_outlined),
-              selectedIcon: Icon(Icons.tune),
-              label: 'Ajustes'),
+              icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune), label: 'Ajustes'),
         ],
       ),
     );
@@ -290,14 +258,11 @@ class _WellbeingShellState extends State<WellbeingShell> {
     setState(() {
       final mood = (_snapshot.moodScore / 10).clamp(1, 10).toDouble();
       final energy = (_snapshot.activityScore / 10).clamp(1, 10).toDouble();
-      final stress =
-          ((100 - _snapshot.stressLoad) / 10).clamp(1, 10).toDouble();
-      final sleepHours =
-          ((_snapshot.sleepScore / 100) * 4 + 5.0).clamp(0, 12).toDouble();
-      final activityMinutes =
-          ((_snapshot.activityScore / 100) * 120).clamp(0, 240).toDouble();
-      final socialMinutes =
-          ((100 - _snapshot.socialScore) * 2.4).clamp(0, 360).toDouble();
+      final stress = ((100.0 - _snapshot.stressLoad) / 10).clamp(1, 10).toDouble();
+      final sleepHours = ((_snapshot.sleepScore / 100) * 4 + 5.0).clamp(0.0, 12.0);
+      final activityMinutes = ((_snapshot.activityScore / 100) * 120).clamp(0.0, 240.0);
+      final socialMinutes = ((100.0 - _snapshot.socialScore) * 2.4).clamp(0.0, 360.0);
+
       _history.insert(
         0,
         CheckInRecord(
@@ -320,6 +285,6 @@ class _WellbeingShellState extends State<WellbeingShell> {
   }
 
   void _openCameraStub() async {
-    // Placeholder: open camera via SupportActions in UI. Kept here for future wiring.
+    // Placeholder para la integración futura de la cámara
   }
 }
