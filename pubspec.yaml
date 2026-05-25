@@ -17,7 +17,8 @@ dependencies:
   path_provider: ^2.1.0
   http: ^1.2.0
   share_plus: ^10.0.0
-  onnxruntime: ^1.4.1
+  onnxruntime_v2: ^1.23.2
+  image: ^4.2.0
 
 dev_dependencies:
   flutter_test:
@@ -29,3 +30,4 @@ flutter:
   assets:
     - assets/models/bilstm_wellbeing.onnx
     - assets/models/bilstm_wellbeing.onnx.data
+    - assets/models/nutrition_model.onnx

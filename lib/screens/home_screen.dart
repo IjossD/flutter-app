@@ -5,7 +5,6 @@ import '../theme/app_theme.dart';
 import '../widgets/score_ring.dart';
 import '../widgets/trend_sparkline.dart';
 import '../utils/support_actions.dart';
-import '../utils/image_actions.dart';
 
 class HomeScreen extends StatelessWidget {
   final WellbeingSnapshot snapshot;
@@ -27,6 +26,14 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasHistory = history.isNotEmpty;
+    final trendValues = history
+        .take(7)
+        .map((record) => record.score.toDouble())
+        .toList()
+        .reversed
+        .toList();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
       child: Column(
@@ -38,84 +45,147 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 20),
           const _HealthConnectCard(),
           const SizedBox(height: 16),
-          _WeeklySummaryCard(history: history),
-          const SizedBox(height: 16),
-          ScoreRing(
-            score: snapshot.overallScore,
-            label: 'Bienestar de hoy',
-            subtitle: snapshot.message,
-          ),
-          const SizedBox(height: 18),
-          _SupportEscalationCard(
-            snapshot: snapshot,
-            onRegister: onRegisterSupportAction,
-            onOpenCamera: onOpenCamera,
-          ),
-          const SizedBox(height: 16),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.45,
-            children: [
-              _MetricCard(
-                  title: 'Sueño',
-                  value: snapshot.sleepScore,
-                  color: AppTheme.sage,
-                  icon: Icons.nightlight_round),
-              _MetricCard(
-                  title: 'Actividad',
-                  value: snapshot.activityScore,
-                  color: AppTheme.amber,
-                  icon: Icons.directions_walk),
-              _MetricCard(
-                  title: 'Redes',
-                  value: snapshot.socialScore,
-                  color: AppTheme.terracotta,
-                  icon: Icons.smartphone_outlined),
-              _MetricCard(
-                  title: 'Carga',
-                  value: snapshot.stressLoad,
-                  color: AppTheme.terracotta,
-                  icon: Icons.water_drop_outlined),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Text('Tendencia de 7 días',
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          TrendSparkline(values: snapshot.trend),
-          const SizedBox(height: 18),
-          Text('Últimos check-ins',
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          ...history.take(3).map(
-                (record) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _HistoryTile(record: record),
+          if (!hasHistory) ...[
+            _EmptyDashboardCard(onOpenCheckIn: onOpenCheckIn),
+          ] else ...[
+            _WeeklySummaryCard(history: history),
+            const SizedBox(height: 16),
+            ScoreRing(
+              score: snapshot.overallScore,
+              label: 'Bienestar de hoy',
+              subtitle: snapshot.message,
+            ),
+            const SizedBox(height: 18),
+            _SupportEscalationCard(
+              snapshot: snapshot,
+              onRegister: onRegisterSupportAction,
+              onOpenCamera: onOpenCamera,
+            ),
+            const SizedBox(height: 16),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.45,
+              children: [
+                _MetricCard(
+                    title: 'Sueño',
+                    value: snapshot.sleepScore,
+                    color: AppTheme.sage,
+                    icon: Icons.nightlight_round),
+                _MetricCard(
+                    title: 'Actividad',
+                    value: snapshot.activityScore,
+                    color: AppTheme.amber,
+                    icon: Icons.directions_walk),
+                _MetricCard(
+                    title: 'Redes',
+                    value: snapshot.socialScore,
+                    color: AppTheme.terracotta,
+                    icon: Icons.smartphone_outlined),
+                _MetricCard(
+                    title: 'Carga',
+                    value: snapshot.stressLoad,
+                    color: AppTheme.terracotta,
+                    icon: Icons.water_drop_outlined),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Text('Tendencia de 7 días',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            TrendSparkline(values: trendValues),
+            const SizedBox(height: 18),
+            Text('Últimos check-ins',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 12),
+            ...history.take(3).map(
+                  (record) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _HistoryTile(record: record),
+                  ),
                 ),
+            const SizedBox(height: 18),
+            if (insights.isNotEmpty) ...[
+              Text('Insight principal',
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              _InsightHighlight(
+                title: insights.first.title,
+                body: insights.first.body,
+                label: insights.first.label,
               ),
-          const SizedBox(height: 18),
-          Text('Insight principal',
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          _InsightHighlight(
-            title: insights.first.title,
-            body: insights.first.body,
-            label: insights.first.label,
+              const SizedBox(height: 14),
+              if (insights.length > 1) ...[
+                Text('Próximas señales a vigilar',
+                    style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 10),
+                ...insights.skip(1).map(
+                      (insight) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _InsightListTile(item: insight),
+                      ),
+                    ),
+              ],
+            ] else ...[
+              Text('Estado de tus patrones',
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              const _InsightHighlight(
+                title: 'Sin señales todavía',
+                body:
+                    'Aún no hay check-ins para comparar. Guarda tu primer registro y aquí empezará tu baseline personal.',
+                label: 'Inicio',
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyDashboardCard extends StatelessWidget {
+  final VoidCallback onOpenCheckIn;
+
+  const _EmptyDashboardCard({required this.onOpenCheckIn});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.sage.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Todavía no hay registros',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Haz tu primer check-in para que la app empiece vacía y construya tu baseline personal desde cero.',
+            style:
+                Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.4),
           ),
           const SizedBox(height: 14),
-          Text('Próximas señales a vigilar',
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 10),
-          ...insights.skip(1).map(
-                (insight) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _InsightListTile(item: insight),
-                ),
+          FilledButton.tonal(
+            onPressed: onOpenCheckIn,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
+            ),
+            child: const Text('Hacer primer check-in'),
+          ),
         ],
       ),
     );
@@ -678,6 +748,7 @@ class _SupportEscalationCard extends StatelessWidget {
                             ],
                           ),
                         );
+                        if (!context.mounted) return;
                         if (confirm == true) {
                           SupportActions.callNumber(context, '106');
                           onRegister(
@@ -705,6 +776,7 @@ class _SupportEscalationCard extends StatelessWidget {
                           ),
                         );
                         if (consent == true) {
+                          if (!context.mounted) return;
                           final subject =
                               'Resumen de bienestar - ${DateTime.now().toLocal().toIso8601String().split('T').first}';
                           final body =
